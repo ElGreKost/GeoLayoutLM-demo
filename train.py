@@ -23,7 +23,8 @@ def main():
 
     trainer = Trainer(
         accelerator=cfg.train.accelerator,
-        gpus=torch.cuda.device_count(),
+        # gpus=torch.cuda.device_count(),     # deprecated
+        devices=torch.cuda.device_count(),
         max_epochs=cfg.train.max_epochs,
         gradient_clip_val=cfg.train.clip_gradient_value,
         gradient_clip_algorithm=cfg.train.clip_gradient_algorithm,
@@ -32,9 +33,9 @@ def main():
         sync_batchnorm=True,
         precision=16 if cfg.train.use_fp16 else 32,
         detect_anomaly=False,
-        replace_sampler_ddp=False,
-        move_metrics_to_cpu=False,
-        progress_bar_refresh_rate=0,
+        # replace_sampler_ddp=False,    # deprecated | 1.5 -> 2 : use use_distributed_sampler; the sampler gets created not only for the DDP strategies
+        # move_metrics_to_cpu=False,  # deprecated | implement particular offload logic in your custom metric or turn it on in torchmetrics
+        # progress_bar_refresh_rate=0,    # deprecated | set the ProgressBar callback and set refresh_rate there, or pass enable_progress_bar=False to disable the progress bar
         check_val_every_n_epoch=cfg.train.val_interval,
         logger=loggers,
         benchmark=cfg.cudnn_benchmark,

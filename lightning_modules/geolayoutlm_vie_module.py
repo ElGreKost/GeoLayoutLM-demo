@@ -21,6 +21,7 @@ class GeoLayoutLMVIEModule(BROSModule):
         super().__init__(cfg)
 
         self.training_step_outputs = []     # kkakkavas addition
+        self.validation_step_outputs = []     # kkakkavas addition
 
         class_names = get_class_names(self.cfg.dataset_root_path)
         bio_class_names = ["O"]
@@ -69,7 +70,7 @@ class GeoLayoutLMVIEModule(BROSModule):
             "loss_labeling": loss_dict["labeling_loss"].detach(), 
             "loss_linking": loss_dict["linking_loss"].detach(),
         }
-        self.training_step_outputs.append(head_outputs['logits4labeling'].detach()) # kkakkavas
+        self.training_step_outputs.append(head_outputs) # kkakkavas
         return ret_loss
 
     @overrides
@@ -107,15 +108,21 @@ class GeoLayoutLMVIEModule(BROSModule):
 
     @torch.no_grad()
     @overrides
-    def validation_step(self, batch, batch_idx, *args):
+    # self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter) this is the functions that calls us
+    def validation_step(self, batch, batch_idx, *args, **kwargs):   # kakkavas added **kwargs
+        # print('In eval step\n' * 10)
+        # print(batch)
+        # print('-' * 20)
         head_outputs, loss_dict = self.net(batch)
+        self.validation_step_outputs.append(head_outputs)
         step_out = do_eval_step(batch, head_outputs, loss_dict, self.eval_kwargs)
-        return step_out
+        return step_out # kk
 
     @torch.no_grad()
     @overrides
-    def validation_epoch_end(self, validation_step_outputs):
-        scores = do_eval_epoch_end(validation_step_outputs)
+    # def validation_epoch_end(self, validation_step_outputs):  # deprecated
+    def on_validation_epoch_end(self):
+        scores = do_eval_epoch_end(self.validation_step_outputs)
         for task_name, score_task in scores.items():
             self.f1_res[f'f1_{task_name}'] = score_task['f1']
             suffix = ''

@@ -54,7 +54,7 @@ class GeoLayoutLMVIEModel(nn.Module):
             "alibaba-damo/geolayoutlm-large-uncased",
         ]:
             self._init_weight()
-    
+
     def _init_weight(self):
         model_path = self.model_cfg.model_ckpt
         logger.info("init weight from {}".format(model_path))
@@ -188,7 +188,7 @@ class GeoLayoutLMVIEModel(nn.Module):
         # labeling loss
         labeling_loss = labeling_loss + self.loss_func_labeling(
             head_outputs["logits4labeling"].transpose(1, 2),
-            batch["bio_labels"]
+            batch["bio_labels"].to(torch.long) # todo This will hide the problem But I don't really think is the solution
         )
         # linking loss
         for logits_lk in head_outputs["logits4linking_list"]:
